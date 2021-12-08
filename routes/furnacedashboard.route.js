@@ -58,4 +58,22 @@ router.get('/time', async function(req, res, next) {
       next(err);
     }
   });
+  router.post('/getbatch', async function(req, res, next) {
+    try {
+       // console.log(req);
+      res.json(await furnacedash.batchnomachinewise(req.body));
+    } catch (err) {
+      console.error(`Error while getting Meters `, err.message);
+      next(err);
+    }
+  });
+  router.post('/getbatchdetail', async function(req, res, next) {
+    try {
+       // console.log(req);
+      res.json(await furnacedash.batchdetailmeterwise(req.body));
+    } catch (err) {
+      console.error(`Error while getting Meters `, err.message);
+      next(err);
+    }
+  });
 module.exports = router;

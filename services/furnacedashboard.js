@@ -126,6 +126,59 @@ async function EnergyData(emname){
     //const meta = {page};
     return data;
   }
+  async function batchnomachinewise(emname){
+    
+    let emn=emname.machineno;
+    const rows1 = await db.query(`select * from machine_master where friendly_name like '${emn}%'`);
+    console.log(rows1)
+    let mcno=rows1[0].machineno;
+    let startdate=emname.start_date;
+    let enddate=emname.end_date;
+    let query=""
+    if(startdate=='' && enddate=='')
+    {
+      query= `select * from batch_detail where machineno=${mcno}`
+    }
+    else
+    {
+      query=`select * from batch_detail where machineno=${mcno} and created between '${startdate}' and '${enddate}'`
+    }
+    const rows = await db.query(query);
+    const data = helper.emptyOrRows(rows);
+   // console.log(rows)
+    //const meta = {page};
+    return data;
+  }
+  async function batchdetailmeterwise(emname){
+    
+    let emn=emname.machineno;
+    let startdate=emname.start_date;
+    let enddate=emname.end_date;
+    const rows1 = await db.query(`select * from machine_master where friendly_name like '${emn}%'`);
+    let machineno=rows1[0].machineno;
+    let batchno=emname.batchno;
+    let query=""
+    let query1=""
+    if(startdate=='' && enddate=='')
+    {
+      query= `select created as timestamp,${emn}_Voltage as Voltage,${emn}_batchno as batchno,${emn}_current as Current ,${emn}_pf as Pf,${emn}_kwhr as Kwhr,${emn}_power as Power from serial_data where ${emn}_batchno='${batchno}'`
+      query1= `select * from batch_detail where machineno=${machineno} and batchno='${batchno}'`
+    }
+    else
+    {
+      //query=`select * from batch_detail where machineno=${emn} and created between '${startdate}' and '${enddate}'`
+    }
+    const rows = await db.query(query);
+    const data = helper.emptyOrRows(rows);
+    const rows2 = await db.query(query1);
+    const data1 = helper.emptyOrRows(rows2);
+   // console.log(rows)
+    //const meta = {page};
+    return {
+      data,
+      data1
+    };
+  }
   async function energyupdate(emname){
     
     let emn=emname.friendly_name;
@@ -148,5 +201,7 @@ async function EnergyData(emname){
     EnergyData,
     meterhistory,
     EnergyBatchData,
-    energyupdate
+    energyupdate,
+    batchdetailmeterwise,
+    batchnomachinewise,
   }
