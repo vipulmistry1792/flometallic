@@ -118,6 +118,7 @@ async function EnergyData(emname){
     let emn=emname.machineno;
     let startdate=emname.start_date;
     let enddate=emname.end_date;
+   // console.log(`select created as timestamp,${emn}_Voltage as Voltage,${emn}_batchno as batchno,${emn}_current as Current ,${emn}_pf as Pf,${emn}_kwhr as Kwhr,${emn}_power as Power from serial_data where created between '${startdate}' and '${enddate}'`)
     const rows = await db.query(
      `select created as timestamp,${emn}_Voltage as Voltage,${emn}_batchno as batchno,${emn}_current as Current ,${emn}_pf as Pf,${emn}_kwhr as Kwhr,${emn}_power as Power from serial_data where created between '${startdate}' and '${enddate}'`
     );
@@ -130,18 +131,18 @@ async function EnergyData(emname){
     
     let emn=emname.machineno;
     const rows1 = await db.query(`select * from machine_master where friendly_name like '${emn}%'`);
-    console.log(rows1)
+    //console.log(rows1)
     let mcno=rows1[0].machineno;
     let startdate=emname.start_date;
     let enddate=emname.end_date;
     let query=""
     if(startdate=='' && enddate=='')
     {
-      query= `select * from batch_detail where machineno=${mcno}`
+      query= `select * from batch_detail where machineno=${mcno} order by created desc` 
     }
     else
     {
-      query=`select * from batch_detail where machineno=${mcno} and created between '${startdate}' and '${enddate}'`
+      query=`select * from batch_detail where machineno=${mcno} and created between '${startdate}' and '${enddate}' order by created desc`
     }
     const rows = await db.query(query);
     const data = helper.emptyOrRows(rows);
@@ -159,6 +160,8 @@ async function EnergyData(emname){
     let batchno=emname.batchno;
     let query=""
     let query1=""
+    let data;
+    let data1;
     if(startdate=='' && enddate=='')
     {
       query= `select created as timestamp,${emn}_Voltage as Voltage,${emn}_batchno as batchno,${emn}_current as Current ,${emn}_pf as Pf,${emn}_kwhr as Kwhr,${emn}_power as Power from serial_data where ${emn}_batchno='${batchno}'`
@@ -166,12 +169,22 @@ async function EnergyData(emname){
     }
     else
     {
+      query1=`select * from batch_detail where machineno=${machineno} and created between '${startdate}' and '${enddate}'`
       //query=`select * from batch_detail where machineno=${emn} and created between '${startdate}' and '${enddate}'`
     }
-    const rows = await db.query(query);
-    const data = helper.emptyOrRows(rows);
+
+    if(startdate=='' && enddate=='')
+    {
+      const rows = await db.query(query);
+      data = helper.emptyOrRows(rows);
+    }
+    else
+    {
+      data =[];
+    }
+    console.log(query1)
     const rows2 = await db.query(query1);
-    const data1 = helper.emptyOrRows(rows2);
+    data1 = helper.emptyOrRows(rows2);
    // console.log(rows)
     //const meta = {page};
     return {
@@ -196,6 +209,52 @@ async function EnergyData(emname){
     //const meta = {page};
     return data;
   }
+  async function energyconsuption(emname){
+    let machineno=emname.machineno;
+    let startdate=emname.start_date;
+    let enddate=emname.end_date;
+    let rows=[]
+    if(machineno == 'All'){
+      
+      rows = await db.query(`select date(created)  as Date,ifnull(max(em1_kwhr)-min(em1_kwhr),0) as energy,ifnull(max(em2_kwhr)-min(em2_kwhr),0) as energy1,ifnull(max(em3_kwhr)-min(em3_kwhr),0) as energy2,ifnull(max(em4_kwhr)-min(em4_kwhr),0) as energy3,ifnull(max(em5_kwhr)-min(em5_kwhr),0) as energy4,ifnull(max(em6_kwhr)-min(em6_kwhr),0) as energy5,ifnull(max(em7_kwhr)-min(em7_kwhr),0) as energy6 from serial_data where  created between '${startdate}' and '${enddate}' group by date(created)`);
+    }
+    else
+    {
+      rows = await db.query(`select date(created)  as Date,ifnull(max(${machineno}_kwhr)-min(${machineno}_kwhr),0) as energy from serial_data where created between '${startdate}' and '${enddate}' group by date(created)`);
+    }
+
+    const data = helper.emptyOrRows(rows);
+   // console.log(rows)
+    //const meta = {page};
+    return data;
+  }
+  async function energyconsuptionhourly(emname){
+    let machineno=emname.machineno;
+    let startdate=emname.start_date;
+    let enddate=emname.end_date;
+    let rows=[]
+    if(machineno == 'All'){
+      
+      rows = await db.query(`select  DATE_FORMAT(created, '%Y-%m-%d %H:00:00') as Date,ifnull(max(em1_kwhr)-min(em1_kwhr),0) as energy,ifnull(max(em2_kwhr)-min(em2_kwhr),0) as energy1,ifnull(max(em3_kwhr)-min(em3_kwhr),0) as energy2 from serial_data where  created between DATE_FORMAT('${startdate}', '%Y-%m-%d %H:00:00') and DATE_FORMAT('${enddate}', '%Y-%m-%d %H:00:00') group by DATE_FORMAT(created, '%Y-%m-%d %H:00:00')`);
+    }
+    else
+    {
+      rows = await db.query(`select  DATE_FORMAT(created, '%Y-%m-%d %H:00:00') as Date,ifnull(max(${machineno}_kwhr)-min(${machineno}_kwhr),0) as energy from serial_data where  created between DATE_FORMAT('${startdate}', '%Y-%m-%d %H:%i:00') and DATE_FORMAT('${enddate}', '%Y-%m-%d %H:%i:00') group by DATE_FORMAT(created, '%Y-%m-%d %H:00:00')`);
+    }
+
+    const data = helper.emptyOrRows(rows);
+  // console.log(`select  DATE_FORMAT(created, '%Y-%m-%d %H:%i:00') as Date,ifnull(max(em1_kwhr)-min(em1_kwhr),0) as energy,ifnull(max(em2_kwhr)-min(em2_kwhr),0) as energy1,ifnull(max(em3_kwhr)-min(em3_kwhr),0) as energy2,ifnull(max(em4_kwhr)-min(em4_kwhr),0) as energy3,ifnull(max(em5_kwhr)-min(em5_kwhr),0) as energy4,ifnull(max(em6_kwhr)-min(em6_kwhr),0) as energy5,ifnull(max(em7_kwhr)-min(em7_kwhr),0) as energy6 from serial_data where  created between DATE_FORMAT('${startdate}', '%Y-%m-%d %H:%i:00') and DATE_FORMAT('${enddate}', '%Y-%m-%d %H:%i:00') group by DATE_FORMAT(created, '%Y-%m-%d %H:%i:00')`)
+    //const meta = {page};
+    return data;
+  }
+  async function onlineData(emname){
+    let rows=[]
+      rows = await db.query(`select * from serial_data order by created desc limit 1`);
+    const data = helper.emptyOrRows(rows);
+  // console.log(`select  DATE_FORMAT(created, '%Y-%m-%d %H:%i:00') as Date,ifnull(max(em1_kwhr)-min(em1_kwhr),0) as energy,ifnull(max(em2_kwhr)-min(em2_kwhr),0) as energy1,ifnull(max(em3_kwhr)-min(em3_kwhr),0) as energy2,ifnull(max(em4_kwhr)-min(em4_kwhr),0) as energy3,ifnull(max(em5_kwhr)-min(em5_kwhr),0) as energy4,ifnull(max(em6_kwhr)-min(em6_kwhr),0) as energy5,ifnull(max(em7_kwhr)-min(em7_kwhr),0) as energy6 from serial_data where  created between DATE_FORMAT('${startdate}', '%Y-%m-%d %H:%i:00') and DATE_FORMAT('${enddate}', '%Y-%m-%d %H:%i:00') group by DATE_FORMAT(created, '%Y-%m-%d %H:%i:00')`)
+    //const meta = {page};
+    return data;
+  }
   module.exports = {
     TimeData,
     EnergyData,
@@ -204,4 +263,7 @@ async function EnergyData(emname){
     energyupdate,
     batchdetailmeterwise,
     batchnomachinewise,
+    energyconsuption,
+    energyconsuptionhourly,
+    onlineData
   }

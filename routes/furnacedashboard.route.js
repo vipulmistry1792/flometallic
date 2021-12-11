@@ -22,6 +22,16 @@ router.get('/time', async function(req, res, next) {
       next(err);
     }
   });
+/* GET tags listing. */
+router.get('/online', async function(req, res, next) {
+  try {
+     // console.log(req);
+    res.json(await furnacedash.onlineData());
+  } catch (err) {
+    console.error(`Error while getting Meters `, err.message);
+    next(err);
+  }
+});
   router.post('/history', async function(req, res, next) {
     try {
        // console.log(req);
@@ -71,6 +81,24 @@ router.get('/time', async function(req, res, next) {
     try {
        // console.log(req);
       res.json(await furnacedash.batchdetailmeterwise(req.body));
+    } catch (err) {
+      console.error(`Error while getting Meters `, err.message);
+      next(err);
+    }
+  });
+  router.post('/getenergydetail', async function(req, res, next) {
+    try {
+       // console.log(req);
+      res.json(await furnacedash.energyconsuption(req.body));
+    } catch (err) {
+      console.error(`Error while getting Meters `, err.message);
+      next(err);
+    }
+  });
+  router.post('/getenergyhourly', async function(req, res, next) {
+    try {
+       // console.log(req);
+      res.json(await furnacedash.energyconsuptionhourly(req.body));
     } catch (err) {
       console.error(`Error while getting Meters `, err.message);
       next(err);

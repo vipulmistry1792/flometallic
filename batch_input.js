@@ -3,6 +3,7 @@ const meters = require('./services/meter_master.service');
 const batchDetail = require('./services/batch_detail.service');
 const batchMaster = require('./services/batch_master.service');
 const Batchenergy = require('./services/furnacedashboard');
+const IdealDetail = require('./services/ideal_detail.service');
 async function pollcb(batch)
 {
         let lastbachno=0;
@@ -10,6 +11,7 @@ async function pollcb(batch)
         let starttime=new Date();
         let laststarttime;
         let lastendtime;
+        let lastendtime1;
         let pin=batch.pinno;
         let state =batch.state;
         let std_time=0;
@@ -20,6 +22,7 @@ async function pollcb(batch)
         var batch1 = {} // empty Object
         var batch_up = {} // empty Object
         var batch_energy = {} // empty Object
+        var idealtime = {} // empty Object
         var batch1_up = {} // empty Object
         let up=0; 
         let emptybatch=0;       
@@ -40,7 +43,7 @@ async function pollcb(batch)
                 unique_batch=(lastbatchdetail[0].unique_batch)+1
                 var n=(lastbachno.search("-"))+1;
                 let n1=lastbachno.substring(n)
-                lastendtime=lastbatchdata[0].batchendtime;
+                
                 lastbatchstart=(lastbatchdetail[0].batchno).substring(0,n)
                 if(lastbatchstart==(lastbatchdata[0].batchno).substring(0,n))
                 {
@@ -51,7 +54,10 @@ async function pollcb(batch)
                         up=1;
                         lastbachno=lastbatchdata[0].batchno; 
                 }
+                console.log(lastbatchdetail[0]);
                 laststarttime=Date.parse(lastbatchdetail[0].batchstarttime);
+                lastendtime=Date.parse(lastbatchdetail[0].batchendtime);
+                console.log(lastendtime);
         }
         else{
 	      // console.log(lastbatchdata)
@@ -81,7 +87,7 @@ async function pollcb(batch)
         "friendly_name":friendly_name
 }
 
-    //console.log(batch_up)
+    console.log(batch)
        if(lastbatchdetail.length > 0)
        {
         // console.log("true")
@@ -93,7 +99,23 @@ async function pollcb(batch)
         }
         else{
                 laststarttime=new Date(laststarttime);
+                lastendtime=new Date(lastendtime);
                 batchtime=(starttime.getTime()-laststarttime.getTime())/1000
+                //console.log(`${starttime.getTime()} ====  ${lastendtime.getTime()}` )
+                difftime=(starttime.getTime()-lastendtime.getTime())/1000
+                //difftime=0;
+                idealtime={
+                        "batchno":lastbachno,
+                        "pinno":pin,
+                        "machineno":meterno,
+                        "batchstarttime":starttime,
+                        "unique_batch":unique_batch,
+                        "std_time":std_time,
+                        "ton_kwh":ton_kwh,
+                        "set_kwh":set_kwh,
+                        "batchtime":difftime
+                }
+                console.log(idealtime)
                 if(batchtime>30 || emptybatch == 0)
                 {
                         dup_batch1=await batchDetail.duplicatebatchcheck(meterno,lastbachno);
@@ -106,10 +128,13 @@ async function pollcb(batch)
                                // console.log("False")
 			       if(state==1)
 				{
-                                        console.log(lastendtime)
-                                        if(lastendtime !=''  || lastendtime !='NULL'){
+                                        //console.log(lastendtime)
+                                        if(lastendtime !=''  || lastendtime !='NULL' || emptybatch == 0){
                                                 let p= await batchDetail.create(batch);
                                                 let q= await batchMaster.updaterunningbatch(batch_up);
+                                                if(lastbatchdetail.length > 0){
+                                                let r= await IdealDetail.update(idealtime);
+                                                }
                                         }
 
 				}
@@ -149,7 +174,7 @@ async function pollcb(batch)
                                                 let q= await batchDetail.update(batch1);
                                                 let r= await batchMaster.updaterunningbatch(batch_up);
                                                 let s= await Batchenergy.energyupdate(batch_energy);
-                                        
+                                                let t= await IdealDetail.create(batch);                                      
 
                                 }
                                 

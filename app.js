@@ -10,6 +10,7 @@ const batchmasterRouter = require('./routes/batch_master.route');
 const machinemasterRouter = require('./routes/meter_master.route');
 const tagsRouter = require('./routes/tag_master.route');
 const furnaceDashRouter = require('./routes/furnacedashboard.route');
+const shiftRouter = require('./routes/shift_master.route');
 const Batchinput = require('./batch_input');
 
 const fs = require('fs');
@@ -29,6 +30,7 @@ app.use('/batchmaster', batchmasterRouter);
 app.use('/machine', machinemasterRouter);
 app.use('/tags', tagsRouter);
 app.use('/furnacedash', furnaceDashRouter);
+app.use('/shift', shiftRouter);
 app.listen(port, () => {
     console.log(`Server started on port`);
     //const Serial = require('./serial_data');

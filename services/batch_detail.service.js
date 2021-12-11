@@ -11,7 +11,7 @@ async function getMultiple(page = 1){
 }
 async function getlastbatchno(machineno){
     //const offset = helper.getOffset(page, config.listPerPage);
-    const rows = await db.query('SELECT * FROM batch_detail where machineno=? order by batchno desc limit 1 ',[machineno]);
+    const rows = await db.query('SELECT * FROM batch_detail where machineno=? order by created desc limit 2 ',[machineno]);
     const data = helper.emptyOrRows(rows);
     //const meta = {page};
     return data;
