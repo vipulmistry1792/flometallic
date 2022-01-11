@@ -113,7 +113,8 @@ async function pollcb(batch)
                         "std_time":std_time,
                         "ton_kwh":ton_kwh,
                         "set_kwh":set_kwh,
-                        "batchtime":difftime
+                        "batchtime":difftime,
+                        "friendly_name":friendly_name
                 }
                 console.log(idealtime)
                 if(batchtime>30 || emptybatch == 0)

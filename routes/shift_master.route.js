@@ -1,11 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const shift = require('../services/shift_master.service');
-
+const runningshift = require('../shiftlogic');
 /* GET tags listing. */
 router.get('/', async function(req, res, next) {
   try {
     res.json(await shift.getMultiple(req.query.page));
+  } catch (err) {
+    console.error(`Error while getting Meters `, err.message);
+    next(err);
+  }
+});
+router.get('/runningshift', async function(req, res, next) {
+  try {
+   // console.log(await runningshift.getrunningshift())
+    res.json(await runningshift.getrunningshift());
   } catch (err) {
     console.error(`Error while getting Meters `, err.message);
     next(err);
@@ -20,6 +29,7 @@ router.post('/', async function(req, res, next) {
     next(err);
   }
 });
+
 /* Add Edit Tag */
 router.post('/Edit/:id', async function(req, res, next) {
   try {

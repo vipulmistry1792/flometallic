@@ -1,6 +1,7 @@
 const db = require('../helpers/db');
 const helper = require('../helpers/helpers');
 const config = require('../helpers/config');
+const { _delete } = require('./user.data.service');
 
 async function getMultiple(page = 1){
   //const offset = helper.getOffset(page, config.listPerPage);
@@ -149,5 +150,6 @@ async function create(tag){
     getRTUTags,
     datafiled,
     insert_data,
-    update
+    update,
+    _delete
   }

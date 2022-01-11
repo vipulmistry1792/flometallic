@@ -182,7 +182,7 @@ async function EnergyData(emname){
     {
       data =[];
     }
-    console.log(query1)
+   // console.log(query1)
     const rows2 = await db.query(query1);
     data1 = helper.emptyOrRows(rows2);
    // console.log(rows)
@@ -192,13 +192,45 @@ async function EnergyData(emname){
       data1
     };
   }
+  async function Shiftdata(emname){
+    
+    let emn=emname.emname;
+    let startdate=emname.start_date;
+    let enddate=emname.end_date;
+    const rows1  = await db.query(`select ifnull(count(DISTINCT(${emn}_batchno)),0) as runnigshiftbatch from serial_data where Sdate between '${startdate}' and '${enddate}' and shift=${emname.shift}`);
+    const rows4  = await db.query(`select ifnull(count(DISTINCT(${emn}_batchno)),0) as Todaytotalbatch from serial_data where Sdate between '${startdate}' and '${enddate}'`);
+    let query=""
+    let query1=""
+    let data;
+    let data1;
+    let data2;
+    let data3;
+    data = helper.emptyOrRows(rows1);
+    data2 = helper.emptyOrRows(rows4);
+    query= `select ifnull((max(${emn}_kwhr)-min(${emn}_kwhr)),0) as shiftKwhr from serial_data where Sdate between '${startdate}' and '${enddate}' and shift=${emname.shift}`
+  
+    const rows2 = await db.query(query);
+    data1 = helper.emptyOrRows(rows2);
+    query1= `select ifnull((max(${emn}_kwhr)-min(${emn}_kwhr)),0) as todayKwhr from serial_data where Sdate between '${startdate}' and '${enddate}'`
+    const rows3 = await db.query(query1);
+    data3 = helper.emptyOrRows(rows3);
+  // console.log(data)
+  // console.log(data1)
+   //console.log(data3)
+    return {
+      data,
+      data1,
+      data2,
+      data3
+    };
+  }
   async function energyupdate(emname){
     
     let emn=emname.friendly_name;
     let batchno=emname.batchno;
     let rows=[]
     if(batchno != ''  || batchno != 'NULL'){
-      console.log(`update batch_detail set used_kwh=(select ifnull(max(${emn}_kwhr)-min(${emn}_kwhr),0) from serial_data where ${emn}_batchno ='${batchno}') where batchno='${batchno}'`);
+    //  console.log(`update batch_detail set used_kwh=(select ifnull(max(${emn}_kwhr)-min(${emn}_kwhr),0) from serial_data where ${emn}_batchno ='${batchno}') where batchno='${batchno}'`);
       rows = await db.query(
         `update batch_detail set used_kwh=(select ifnull(max(${emn}_kwhr)-min(${emn}_kwhr),0) from serial_data where ${emn}_batchno ='${batchno}') where batchno='${batchno}'`
        );
@@ -255,6 +287,18 @@ async function EnergyData(emname){
     //const meta = {page};
     return data;
   }
+  async function idealenergyused(emname){
+    let machineno=emname.emname;
+    let startdate=emname.start_date;
+    let enddate=emname.end_date;
+    const rows1 = await db.query(`select * from machine_master where friendly_name like '${machineno}%'`);
+    let mcno=rows1[0].machineno;
+    let rows=[]
+    //console.log(`select DATE_FORMAT(created, '%Y-%m-%d') as Date,ifnull(sum(used_kwh),0) used_energy,ifnull(sum(batchtime),0) as batchtime from ideal_detail where created between '${startdate}' and '${enddate}' and machineno=${mcno} group by DATE_FORMAT(created, '%Y-%m-%d')`);
+      rows = await db.query(`select ifnull(sum(used_kwh),0) used_energy,ifnull(sum(batchtime),0) as batchtime from ideal_detail where created between '${startdate}' and '${enddate}' and machineno=${mcno}`);
+    const data = helper.emptyOrRows(rows);
+    return data;
+  }
   module.exports = {
     TimeData,
     EnergyData,
@@ -265,5 +309,7 @@ async function EnergyData(emname){
     batchnomachinewise,
     energyconsuption,
     energyconsuptionhourly,
-    onlineData
+    onlineData,
+    Shiftdata,
+    idealenergyused
   }

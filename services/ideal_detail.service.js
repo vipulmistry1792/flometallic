@@ -61,18 +61,33 @@ async function getlastbatchno(machineno){
   }
   async function update(batch){
     let machineno=batch.machineno;
+    let friendly_name=batch.friendly_name;
     //console.log(`SELECT * FROM ideal_detail where machineno=${machineno} and idealendtime IS NULL order by created desc`);
     const rows = await db.query(`SELECT * FROM ideal_detail where machineno=? and idealendtime IS NULL order by created desc limit 1`,[machineno]);
     const data = helper.emptyOrRows(rows);
     let id=data[0].id;
+    let starttime=data[0].idealstarttime;
+    let endtime=batch.batchstarttime;
     let result;
+    let result1;
+    let energy;
     if(data.length>0)
     {
+      result1 = await db.query(`select (max(${friendly_name}_kwhr)-min(${friendly_name}_kwhr)) as used_energy from serial_data where created between ? and ? `,[starttime,endtime]);
+      const data1 = helper.emptyOrRows(result1);
+      if(data1.length>0)
+      {
+        energy=data1[0].used_energy;
+      }
+      else
+      {
+        energy=0;
+      }   
         //console.log("Present");
        // console.log(`update  ideal_detail set pinno=${batch.pinno},idealendtime='${batch.batchstarttime}',batchtime=${batch.batchtime} where machineno=${batch.machineno} and id=${id}`);
         result = await db.query(
-            `update  ideal_detail set pinno=?,idealendtime=?,batchtime=? where machineno=? and id=?`, 
-            [batch.pinno,batch.batchstarttime,batch.batchtime,batch.machineno,id]);
+            `update  ideal_detail set pinno=?,idealendtime=?,batchtime=?,used_kwh=? where machineno=? and id=?`, 
+            [batch.pinno,batch.batchstarttime,batch.batchtime,energy,batch.machineno,id]);
     }
     else
     {

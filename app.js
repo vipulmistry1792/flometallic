@@ -1,5 +1,7 @@
 const express = require('express');
 const port=process.env.port || 3005;
+const Env_type=process.env.ENV_TYPE || 'local';
+const readdata=process.env.readdata || 0;
 const bodyParser   = require('body-parser');
 const jwt          = require('./helpers/jwt')
 const errorHandler = require('./helpers/error-handler')
@@ -12,11 +14,12 @@ const tagsRouter = require('./routes/tag_master.route');
 const furnaceDashRouter = require('./routes/furnacedashboard.route');
 const shiftRouter = require('./routes/shift_master.route');
 const Batchinput = require('./batch_input');
+const cloud_DataRouter    = require('./routes/meter_cloud_data.route');
 
 const fs = require('fs');
 const app=express();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: "50mb"}));
+app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
 app.use(cors());
 //set static folder 
 app.use(express.static(path.join(__dirname, 'static')));
@@ -30,8 +33,14 @@ app.use('/batchmaster', batchmasterRouter);
 app.use('/machine', machinemasterRouter);
 app.use('/tags', tagsRouter);
 app.use('/furnacedash', furnaceDashRouter);
+app.use('/cloud', cloud_DataRouter);
 app.use('/shift', shiftRouter);
+const SendDatatoCloud     = require('./services/cloulddatasend.service');
 app.listen(port, () => {
     console.log(`Server started on port`);
-    //const Serial = require('./serial_data');
+    //
+    if(Env_type=="local" && readdata==1)
+    {
+        const Serial = require('./serial_data');
+    }
 });

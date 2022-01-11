@@ -5,11 +5,13 @@ const async = require('async');
 const tags      = require('./services/tags');
 const meters = require('./services/meter_master.service');
 const batchMasterService = require('./services/batch_master.service');
+const runningshiftService = require('../shiftlogic');
 var finalans = [];
 let tables_chk
 var meter_d=[];
 var meter_master=[];
 var batchmaster=[];
+var shiftdetail=[];
 client.connectRTUBuffered("COM3", {
    baudRate: 9600,
    parity: "even",
@@ -46,6 +48,10 @@ const insert_data_tags      = async (query) => {
 const customdata_query      = async (query) => {
     await tags.getdata(query);
    // await sleep(10);
+}
+const runningshift      = async () => {
+   shiftdetail=await runningshiftService.runningshift();
+  // await sleep(10);
 }
 async function exTest(query){
     return await tags.getdata(query);
@@ -197,6 +203,7 @@ const getMetersValue = async (meters) => {
 function intervalFunc() {      
                Tags(prototype="Modbus RTU");
                getMetersValue(meter_d);
+               runningshift();
     }
 
   const getMeterValuecoil          = async (id,start_add,qty,type,tag_name,device_name,modfunction) => {
@@ -274,7 +281,6 @@ function sleep(millis) {
 Tags(prototype="Modbus RTU").then(
    response =>{
    console.log(response)
-    //convert(response.datas)
     if(response.length>0)
     {
        
@@ -282,8 +288,7 @@ Tags(prototype="Modbus RTU").then(
     else
     {
 
-    }
-   
+    }   
  }
  )
  .finally(      
@@ -301,31 +306,25 @@ exTest(tablecheck).then(
             console.log("Table Not Present");
             insert_data(opcua_data);
          }
-        
       }
       )
       .finally(      
       )
       metermasterdata().then(
          response =>{
-         console.log(response)
-          //convert(response.datas)
-
-         
+         console.log(response)      
        }
        )
        .finally(      
        );
        getallbatchdata().then(
          response =>{
-         console.log(response)
-          //convert(response.datas)
- 
-         
+         console.log(response)         
        }
        )
        .finally(      
        );
+       runningshift();
 getMetersValue(meter_d).then(
    response =>{
    console.log(response)

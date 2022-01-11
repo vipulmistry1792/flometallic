@@ -9,6 +9,13 @@ async function getMultiple(page = 1){
   //const meta = {page};
   return data;
 }
+async function getcustomsdata(query){
+  //const offset = helper.getOffset(page, config.listPerPage);
+  const rows = await db.query(query);
+  const data = helper.emptyOrRows(rows);
+  //const meta = {page};
+  return data;
+}
 async function getlastbatchno(machineno){
     //const offset = helper.getOffset(page, config.listPerPage);
     const rows = await db.query('SELECT * FROM batch_detail where machineno=? order by created desc limit 2 ',[machineno]);
@@ -79,6 +86,19 @@ async function getlastbatchno(machineno){
     }
     return {message};
   }
+  async function customquery(query){
+    //validateCreate(tag);
+    const result = await db.query(query);
+  
+    let message = 'Error in creating Tag';
+  
+    if (result.affectedRows) {
+      message = 'Tag created successfully';
+      //datafiled(tag);
+    }
+  
+    return {message};
+  }
   module.exports = {
     getMultiple,
     getlastbatchno,
@@ -88,5 +108,7 @@ async function getlastbatchno(machineno){
     getlastbatchnopin,
     duplicatebatchcheck,
     machinewisebatch,
-    datewisebatch
+    datewisebatch,
+    getcustomsdata,
+    customquery
   }  
